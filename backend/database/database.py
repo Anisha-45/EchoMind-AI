@@ -5,16 +5,20 @@ from database.connection import connection, cursor
 # ==========================================
 
 cursor.execute("""
-CREATE TABLE IF NOT EXISTS files (
+CREATE TABLE IF NOT EXISTS document_content(
+
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    path TEXT UNIQUE NOT NULL,
-    extension TEXT,
-    size INTEGER,
-    created_at TEXT,
-    modified_at TEXT,
-    hash TEXT,
-    indexed_at TEXT
+
+    file_id INTEGER UNIQUE,
+
+    raw_text TEXT,
+
+    pages INTEGER,
+
+    title TEXT,
+
+    FOREIGN KEY(file_id) REFERENCES files(id)
+
 )
 """)
 
@@ -58,5 +62,6 @@ CREATE TABLE IF NOT EXISTS search_history (
 
 # Save Changes
 connection.commit()
+
 
 print("All database tables created successfully!")

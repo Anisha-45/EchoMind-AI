@@ -1,33 +1,18 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
 
-from scanner.scanner import scan_folder
-from database.crud import insert_file
+from services.search_service import SearchService
 
 router = APIRouter()
 
-
-class ScanRequest(BaseModel):
-    folder_path: str
+service = SearchService()
 
 
-@router.get("/")
-def scanner_home():
-    return {
-        "module": "Scanner API",
-        "status": "Running"
-    }
+class SearchRequest(BaseModel):
+    query: str
 
 
-@router.post("/scan")
-def scan(request: ScanRequest):
+@router.post("/search")
+def search(request: SearchRequest):
 
-    files = scan_folder(request.folder_path)
-
-    for file in files:
-        insert_file(file)
-
-    return {
-        "status": "success",
-        "files_indexed": len(files)
-    }
+    return service.search(request.query)
