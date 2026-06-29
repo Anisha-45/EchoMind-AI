@@ -1,6 +1,9 @@
 function StatsCard() {
   return (
-    <p>Indexed Files : 0</p>
+    <div className="stats-card">
+      <h3>Indexed Files</h3>
+      <p>0</p>
+    </div>
   );
 }
 

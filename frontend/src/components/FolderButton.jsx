@@ -1,7 +1,7 @@
 function FolderButton() {
   return (
-    <button>
-      Select Folder
+    <button className="folder-btn">
+      📁 Select Folder
     </button>
   );
 }

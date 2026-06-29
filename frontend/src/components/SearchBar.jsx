@@ -3,6 +3,7 @@ function SearchBar() {
     <input
       type="text"
       placeholder="Search your memory..."
+      className="search-input"
     />
   );
 }

@@ -5,15 +5,12 @@ import StatsCard from "../components/StatsCard";
 
 function Home() {
   return (
-    <div>
+    <main>
       <Header />
-
       <SearchBar />
-
       <FolderButton />
-
       <StatsCard />
-    </div>
+    </main>
   );
 }
 
