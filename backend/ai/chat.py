@@ -1,5 +1,10 @@
 import requests
 import re
+from ai.extractor_ai import (
+    is_extraction_query,
+    extract_exact_value,
+)
+from ai.extract_all import extract_all_fields
 from ai.search import (
     search_documents,
     search_document,
@@ -312,7 +317,18 @@ def ask_llm(
     mode="learn",
     file_id=None
 ):
+    # print("✅ Extraction query detected")
 
+    # search_context = ""
+
+    # for _, score, chunk, file_name, page_number in results:
+    #     search_context += chunk + "\n"
+
+    # print(search_context)
+
+    # value = extract_exact_value(question, search_context)
+
+    # print("Extracted Value:", value)
     if history is None:
         history = []
 
@@ -328,7 +344,6 @@ def ask_llm(
                 "answer": "I couldn't find this information in your documents.",
                 "sources": []
             }
-
         seen_files = set()
 
         for _, score, chunk, file_name, page_number in results:
@@ -398,6 +413,63 @@ def ask_llm(
                     "answer": "I couldn't find this information in your document.",
                     "sources": []
                 }
+            # Smart Information Extraction
+            q = question.lower()
+
+            extract_all = (
+                "extract" in q
+                or ("all" in q and "information" in q)
+                or ("all" in q and "details" in q)
+                or ("key" in q and "information" in q)
+                or ("important" in q and "information" in q)
+                or ("summary" in q)
+                or ("summarize" in q)
+                or ("show" in q and "information" in q)
+                or ("give" in q and "information" in q)
+            )
+
+            if extract_all:
+
+                search_context = get_document_context(file_id)
+
+                print(fields)
+# Debug
+
+                if fields:
+
+                    answer = ""
+
+                    for key, value in fields.items():
+                        answer += f"{key.replace('_',' ').title()}: {value}\n"
+
+                    return {
+                        "answer": value,
+                        "sources": [{
+                            "file": results[0][3],
+                            "page": results[0][4]
+                        }]
+                    }
+          
+            if is_extraction_query(question):
+
+                search_context = get_document_context(file_id)
+
+                fields = extract_all_fields(search_context)
+                value = extract_exact_value(
+                    question,
+                    search_context
+                )
+
+                print("Extracted:", value)
+
+                if value:
+                    return {
+                        "answer": value,
+                        "sources": [{
+                            "file": results[0][3],
+                            "page": "Entire Document"
+                        }]
+                    }
 
             for _, score, chunk, file_name, page_number in results:
 
