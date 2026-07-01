@@ -11,6 +11,10 @@ from ai.embedding import generate_embedding
 from database.connection import cursor
 from database.crud import (
     insert_file,
+    insert_document_chunk,
+)
+
+from database.content_crud import (
     insert_document_content,
 )
 
@@ -29,34 +33,46 @@ def scan(request: ScanRequest):
 
         file_id = insert_file(file)
 
-        text = extract_text(file["path"])
+        document = extract_text(file["path"])
 
-        if not text.strip():
-            print(f"⚠ No text found in {file['name']}")
+        if document is None:
             continue
 
-        chunks = chunk_text(text)
+        if not document["text"].strip():
+            print(f"⚠ No text found in {file['name']}")
+            continue
+        insert_document_content(
+            file_id,
+            document
+        )
 
-        print(f"📄 {file['name']} -> {len(chunks)} chunks")
-        for index, chunk in enumerate(chunks):
+        total_chunks = 0
 
-            if not chunk.strip():
-                continue
+        for page in document["page_data"]:
 
-            embedding = generate_embedding(chunk)
+            chunks = chunk_text(page["text"])
 
-            if not embedding:
-                continue
+            for index, chunk in enumerate(chunks):
 
-            insert_document_content(
-                file_id,
-                index,
-                chunk,
-                json.dumps(embedding)
-            )
-        
+                if not chunk.strip():
+                    continue
 
-        print(f"✅ Indexed {len(chunks)} chunks")
+                embedding = generate_embedding(chunk)
+
+                if not embedding:
+                    continue
+
+                insert_document_chunk(
+                    file_id,
+                    page["page"],
+                    index,
+                    chunk,
+                    json.dumps(embedding)
+                )
+
+                total_chunks += 1
+
+        print(f"✅ Indexed {total_chunks} chunks")
 
     return {
         "status": "success",

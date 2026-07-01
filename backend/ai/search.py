@@ -34,10 +34,11 @@ def search_documents(query, top_k=8):
     cursor.execute("""
     SELECT
         dc.file_id,
+        dc.page_number,
         dc.chunk_text,
         dc.embedding,
         f.name
-    FROM document_content dc
+    FROM document_chunks dc
     JOIN files f
         ON dc.file_id = f.id
     WHERE dc.embedding IS NOT NULL
@@ -49,7 +50,7 @@ def search_documents(query, top_k=8):
 
     MIN_SCORE = 0.25
 
-    for file_id, chunk_text, embedding_json, file_name in rows:
+    for file_id, page_number, chunk_text, embedding_json, file_name in rows:
 
         embedding = json.loads(embedding_json)
 
@@ -79,7 +80,8 @@ def search_documents(query, top_k=8):
                 file_id,
                 similarity,
                 chunk_text,
-                file_name
+                file_name,
+                page_number
             )
         )
 
@@ -94,3 +96,83 @@ def search_documents(query, top_k=8):
 
     print("======================\n")
     return results[:top_k]
+def search_document(file_id, query, top_k=8):
+
+    query_embedding = generate_embedding(query)
+
+    cursor.execute("""
+    SELECT
+        dc.file_id,
+        dc.page_number,
+        dc.chunk_text,
+        dc.embedding,
+        f.name
+    FROM document_chunks dc
+    JOIN files f
+        ON dc.file_id = f.id
+    WHERE
+        dc.embedding IS NOT NULL
+        AND dc.file_id = ?
+    """, (file_id,))
+
+    rows = cursor.fetchall()
+
+    results = []
+
+    MIN_SCORE = 0.25
+
+    for file_id, page_number, chunk_text, embedding_json, file_name in rows:
+
+        embedding = json.loads(embedding_json)
+
+        if len(embedding) == 0:
+            continue
+
+        semantic_score = cosine_similarity(
+            query_embedding,
+            embedding
+        )
+
+        keyword_boost = keyword_score(
+            query,
+            chunk_text
+        )
+
+        similarity = (
+            semantic_score * 0.80
+            + keyword_boost * 0.20
+        )
+
+        if similarity < MIN_SCORE:
+            continue
+
+        results.append(
+            (
+                file_id,
+                similarity,
+                chunk_text,
+                file_name,
+                page_number
+            )
+        )
+
+    results.sort(
+        key=lambda x: x[1],
+        reverse=True
+    )
+
+    return results[:top_k]
+def get_document_context(file_id):
+
+    cursor.execute("""
+    SELECT raw_text
+    FROM document_content
+    WHERE file_id = ?
+    """, (file_id,))
+
+    row = cursor.fetchone()
+
+    if row is None:
+        return ""
+
+    return row[0]

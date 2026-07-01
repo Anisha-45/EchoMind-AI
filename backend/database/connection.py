@@ -12,3 +12,5 @@ connection.row_factory = sqlite3.Row
 
 # Create cursor
 cursor = connection.cursor()
+def get_cursor():
+    return connection.cursor()

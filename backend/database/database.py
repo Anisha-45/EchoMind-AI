@@ -37,23 +37,26 @@ CREATE TABLE IF NOT EXISTS files (
 
 )
 """)
-from database.connection import connection, cursor
 
 # ==========================================
 # Create Files Table
 # ==========================================
+# ==========================================
+# Create Document Content Table
+# ==========================================
+
 cursor.execute("""
-CREATE TABLE IF NOT EXISTS document_content(
+CREATE TABLE IF NOT EXISTS document_content (
 
     id INTEGER PRIMARY KEY AUTOINCREMENT,
 
-    file_id INTEGER,
+    file_id INTEGER UNIQUE,
 
-    chunk_index INTEGER,
+    raw_text TEXT,
 
-    chunk_text TEXT,
+    pages INTEGER,
 
-    embedding TEXT,
+    title TEXT,
 
     FOREIGN KEY(file_id) REFERENCES files(id)
 
@@ -64,7 +67,19 @@ CREATE TABLE IF NOT EXISTS document_content(
 # Create Document Content Table
 # ==========================================
 
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS document_chunks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    file_id INTEGER NOT NULL,
+    page_number INTEGER NOT NULL,
+    chunk_index INTEGER NOT NULL,
+    chunk_text TEXT NOT NULL,
+    embedding TEXT,
+    FOREIGN KEY(file_id) REFERENCES files(id)
+)
+""")
 
+connection.commit()
 # ==========================================
 # Create Embeddings Table
 # ==========================================

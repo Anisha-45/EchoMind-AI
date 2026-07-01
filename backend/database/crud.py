@@ -1,7 +1,6 @@
-from database.connection import connection, cursor
-
+from database.connection import connection, get_cursor
 def get_recent_files():
-
+    cursor = get_cursor()
     cursor.execute("""
         SELECT
             id,
@@ -29,7 +28,7 @@ def get_recent_files():
         for row in rows
     ]
 def insert_file(file_data):
-
+    cursor = get_cursor()
     # Check if file already exists
     cursor.execute(
         """
@@ -80,7 +79,7 @@ def insert_file(file_data):
 
 
 def get_file_by_id(file_id):
-
+    cursor = get_cursor()
     cursor.execute(
         """
         SELECT
@@ -106,7 +105,7 @@ def get_file_by_id(file_id):
         "extension": row[3]
     }
 def get_all_files():
-
+    cursor = get_cursor()
     cursor.execute("""
         SELECT
             id,
@@ -133,7 +132,7 @@ def get_all_files():
         for row in rows
     ]
 def save_scan_folder(folder):
-
+    cursor = get_cursor()
     cursor.execute("""
         INSERT OR REPLACE INTO settings(id, scan_folder)
         VALUES(1, ?)
@@ -143,7 +142,7 @@ def save_scan_folder(folder):
 
 
 def get_scan_folder():
-
+    cursor = get_cursor()
     cursor.execute("""
         SELECT scan_folder
         FROM settings
@@ -157,28 +156,34 @@ def get_scan_folder():
 
     return ""
 
-def insert_document_content(file_id, chunk_index, chunk_text, embedding):
-
+def insert_document_chunk(
+    file_id,
+    page_number,
+    chunk_index,
+    chunk_text,
+    embedding
+):
+    cursor = get_cursor()
     cursor.execute(
-        """
-        INSERT INTO document_content
-        (
-            file_id,
-            chunk_index,
-            chunk_text,
-            embedding
-        )
-        VALUES (?, ?, ?, ?)
-        """,
-        (
-            file_id,
-            chunk_index,
-            chunk_text,
-            embedding
-        )
+    """
+    INSERT INTO document_chunks
+    (
+        file_id,
+        page_number,
+        chunk_index,
+        chunk_text,
+        embedding
     )
-
+    VALUES (?, ?, ?, ?, ?)
+    """,
+    (
+        file_id,
+        page_number,
+        chunk_index,
+        chunk_text,
+        embedding
+    )
+)
     
 
-    connection.commit()
     connection.commit()

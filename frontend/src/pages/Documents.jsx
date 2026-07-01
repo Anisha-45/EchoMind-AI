@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import {
   getFiles,
@@ -16,6 +17,7 @@ const formatSize = (bytes) => {
 };
 
 function Documents() {
+  const navigate = useNavigate();
     const [sortBy, setSortBy] = useState("name-asc");
   const [files, setFiles] = useState([]);
   const [search, setSearch] = useState("");
@@ -139,6 +141,12 @@ function Documents() {
                     className="bg-slate-700 hover:bg-slate-600 px-5 py-2 rounded-lg transition"
                 >
                     📁 Show in Folder
+                </button>
+                <button
+                  onClick={() => navigate(`/document-ai/${file.id}`)}
+                  className="bg-violet-600 hover:bg-violet-700 px-5 py-2 rounded-lg transition"
+                >
+                  ✨ Ask AI
                 </button>
 
                 </div>

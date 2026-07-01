@@ -56,6 +56,17 @@ export const saveFolder = (folder) => {
     folder,
   });
 };
+export const askDocumentAI = (
+  fileId,
+  question,
+  history = []
+) =>
+  api.post("/chat/document-chat", {
+    file_id: fileId,
+    question,
+    history,
+  });
+
 export default api;
 
 

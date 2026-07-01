@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-
+import DocumentAI from "./pages/DocumentAI";
 import Home from "./pages/Home";
 import Documents from "./pages/Documents";
 import Recent from "./pages/Recents";
@@ -14,6 +14,10 @@ function App() {
         <Route path="/recent" element={<Recent />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/ai-chat" element={<AIChat />} />
+        <Route
+          path="/document-ai/:id"
+          element={<DocumentAI />}
+        />
       </Routes>
     </BrowserRouter>
   );

@@ -352,24 +352,20 @@ const sendMessage = async () => {
     </div>
 
     {msg.role === "assistant" &&
- msg.sources &&
- msg.sources.length > 0 && (
-
-      <div className="mt-3 text-sm text-cyan-400">
-
-        📄 Sources
+      msg.sources &&
+      msg.sources.length > 0 && (
 
         <ul className="list-disc ml-6 mt-1">
 
-          {msg.sources.map((source) => (
+            {msg.sources.map((source, index) => (
 
-            <li key={source}>{source}</li>
+              <li key={index}>
+                📄 {source.file}
+              </li>
 
-          ))}
+            ))}
 
-        </ul>
-
-      </div>
+          </ul>
 
     )}
 

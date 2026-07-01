@@ -1,6 +1,10 @@
 import requests
 import re
-from ai.search import search_documents
+from ai.search import (
+    search_documents,
+    search_document,
+    get_document_context,
+)
 def detect_language(text):
 
     if re.search(r'[\u0900-\u097F]', text):
@@ -91,6 +95,24 @@ Instead, explain what the documents state and what can reasonably be concluded f
 "I couldn't find this information in your documents."
 
 Do not invent facts.
+10. If the user asks things like:
+
+- Explain this document
+- Explain this PDF
+- Explain this PPT
+- Summarize this
+
+Never explain what a PDF, PPT, or document is.
+
+Instead, summarize the CONTENT of the provided document.
+
+Focus on:
+
+- Main topic
+- Key concepts
+- Important ideas
+- Important sections
+- Conclusion (if present)
 
 =========================
 LANGUAGE RULES
@@ -141,6 +163,19 @@ or
 "Answer in English"
 
 Just answer naturally.
+Reply ONLY in natural Hinglish using English letters.
+
+Write like an experienced Indian teacher.
+
+Use simple conversational language.
+
+Keep technical terms in English.
+
+Example:
+
+Interrupt ek signal hota hai jo CPU ko batata hai ki kisi device ko attention chahiye.
+
+Avoid awkward Hindi translations.
 
 =========================
 ANSWER STYLE
@@ -164,6 +199,14 @@ Give one simple real-life example whenever possible.
 
 If the user asks for more details,
 expand naturally instead of repeating the same sentence.
+When replying in Hinglish:
+
+- Use natural Hinglish like Indian college students.
+- Do not translate English headings unnecessarily.
+- If using headings, keep them in the same language as the user's question.
+- Avoid awkward sentences.
+- Write smooth conversational explanations.
+- Do not use literal translations.
 
 =========================
 ANSWER FORMAT
@@ -263,37 +306,113 @@ Current Question:
 """
 
 
-def ask_llm(question, history=None, mode="learn"):
+def ask_llm(
+    question,
+    history=None,
+    mode="learn",
+    file_id=None
+):
 
     if history is None:
         history = []
 
-    results = search_documents(question, top_k=5)
-
-    if not results:
-        return {
-            "answer": "I couldn't find this information in your documents.",
-            "sources": []
-        }
-
     context = ""
     sources = []
-    seen_files = set()
 
-    for _, score, chunk, file_name in results:
+    if file_id is None:
 
-        context += f"""
-Source: {file_name}
+        results = search_documents(question, top_k=5)
 
-{chunk}
+        if not results:
+            return {
+                "answer": "I couldn't find this information in your documents.",
+                "sources": []
+            }
 
---------------------
+        seen_files = set()
 
-"""
+        for _, score, chunk, file_name, page_number in results:
 
-        if score >= 0.25 and file_name not in seen_files:
-            sources.append(file_name)
-            seen_files.add(file_name)
+            context += f"""
+            Source: {file_name}
+            Page: {page_number}
+
+            {chunk}
+
+            --------------------
+            """
+
+
+            if score >= 0.25 and file_name not in seen_files:
+                sources.append({
+                    "file": file_name,
+                    "page": page_number
+                })
+                seen_files.add(file_name)
+
+    else:
+
+        summary_keywords = [
+                "summarize",
+                "summary",
+                "overview",
+                "explain this",
+                "explain this document",
+                "explain this ppt",
+                "explain this pdf",
+                "explain the document",
+                "summarise",
+                "describe this",
+                "what is this document about",
+            ]
+
+        if any(k in question.lower() for k in summary_keywords):
+
+                context = get_document_context(file_id)
+
+                question = """
+            Summarize this document.
+
+            Your answer should include:
+
+            1. Main topic
+            2. Important concepts
+            3. Key points
+            4. Important sections
+            5. Final conclusion (if present)
+
+            Do NOT explain what a PDF, PPT or document is.
+
+            Explain only the CONTENT of the provided document.
+            """
+        else:
+
+            results = search_document(
+                file_id,
+                question,
+                top_k=5
+            )
+
+            if not results:
+                return {
+                    "answer": "I couldn't find this information in your document.",
+                    "sources": []
+                }
+
+            for _, score, chunk, file_name, page_number in results:
+
+                context += f"""
+                Page: {page_number}
+
+                {chunk}
+
+                """
+
+                if file_name not in sources:
+                    sources.append({
+                    "file": file_name,
+                    "page": page_number
+                })
     language = detect_language(question)
     if language == "english":
 

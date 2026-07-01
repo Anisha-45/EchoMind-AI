@@ -20,7 +20,7 @@ def ai_search(request: SearchRequest):
 
     query = request.query.lower()
 
-    for file_id, score, chunk, file_name in results:
+    for file_id, score, chunk, file_name, page_number in results:
 
         cursor.execute(
             """

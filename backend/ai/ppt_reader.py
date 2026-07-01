@@ -1,24 +1,33 @@
 from pptx import Presentation
+from pathlib import Path
 
 
 def extract_ppt_text(file_path):
 
     presentation = Presentation(file_path)
 
-    text = ""
+    full_text = ""
+    page_data = []
 
-    for slide in presentation.slides:
+    for slide_no, slide in enumerate(presentation.slides, start=1):
 
-        print("Slide")
+        slide_text = ""
 
         for shape in slide.shapes:
 
-            print(shape.shape_type)
-
             if hasattr(shape, "text"):
+                slide_text += shape.text + "\n"
 
-                print(shape.text)
+        full_text += slide_text
 
-                text += shape.text + "\n"
+        page_data.append({
+            "page": slide_no,
+            "text": slide_text
+        })
 
-    return text
+    return {
+        "text": full_text,
+        "pages": len(presentation.slides),
+        "title": Path(file_path).name,
+        "page_data": page_data
+    }
